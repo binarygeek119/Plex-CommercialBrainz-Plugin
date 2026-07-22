@@ -4,6 +4,8 @@ HTTP [Custom Metadata Provider](https://developer.plex.tv/pms/#section/API-Info/
 
 Requires **Plex Media Server 1.43.0+**.
 
+Pull requests and issues are welcome.
+
 ## How matching works
 
 1. Existing CommercialBrainz GUID on the item  
