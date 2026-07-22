@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/CommercialBrainz.PlexProvider/CommercialBrainz.PlexProvider.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/CommercialBrainz.PlexProvider.Tests/CommercialBrainz.PlexProvider.Tests.csproj" />
+  </Folder>
+</Solution>
