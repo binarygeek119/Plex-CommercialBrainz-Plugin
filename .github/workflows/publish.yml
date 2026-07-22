@@ -1,0 +1,92 @@
+name: Publish
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore
+        run: dotnet restore CommercialBrainz.PlexProvider.slnx
+
+      - name: Build
+        run: dotnet build CommercialBrainz.PlexProvider.slnx -c Release --no-restore
+
+      - name: Test
+        run: dotnet test CommercialBrainz.PlexProvider.slnx -c Release --no-build --verbosity normal
+
+      - name: Publish
+        run: >
+          dotnet publish src/CommercialBrainz.PlexProvider/CommercialBrainz.PlexProvider.csproj
+          -c Release
+          -o "${{ github.workspace }}/publish/CommercialBrainz.PlexProvider"
+          --no-build
+
+      - name: Package zip
+        id: package
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME:-manual}"
+          VERSION="${VERSION#v}"
+          if [ "${{ github.event_name }}" != "release" ]; then
+            VERSION="0.0.0-ci.${GITHUB_RUN_NUMBER}"
+          fi
+          NAME="CommercialBrainz.PlexProvider_${VERSION}"
+          OUT="${{ github.workspace }}/artifacts"
+          mkdir -p "$OUT"
+          (
+            cd "${{ github.workspace }}/publish"
+            zip -r "$OUT/${NAME}.zip" CommercialBrainz.PlexProvider
+          )
+          (
+            cd "$OUT"
+            md5sum "${NAME}.zip" | awk '{print $1}' > "${NAME}.md5"
+            sha256sum "${NAME}.zip" | awk '{print $1}' > "${NAME}.sha256"
+          )
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "name=${NAME}" >> "$GITHUB_OUTPUT"
+          ls -la "$OUT"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.package.outputs.name }}
+          path: |
+            ${{ github.workspace }}/artifacts/*.zip
+            ${{ github.workspace }}/artifacts/*.md5
+            ${{ github.workspace }}/artifacts/*.sha256
+          if-no-files-found: error
+
+  upload:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          pattern: CommercialBrainz.PlexProvider_*
+          merge-multiple: true
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            *.zip
+            *.md5
+            *.sha256

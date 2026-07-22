@@ -39,6 +39,18 @@ dotnet run --project src/CommercialBrainz.PlexProvider
 
 Then add `http://localhost:8765/movie` as a provider in Plex.
 
+## Releases
+
+Download the latest packaged provider from [Releases](https://github.com/binarygeek119/Plex-CommercialBrainz-Plugin/releases). Each release includes a zip of the published .NET app plus `.md5` / `.sha256` checksums.
+
+Extract and run:
+
+```bash
+dotnet CommercialBrainz.PlexProvider.dll
+```
+
+(Requires the .NET 8 runtime, or use Docker instead.)
+
 ## Configuration
 
 | Environment variable | Default | Description |
